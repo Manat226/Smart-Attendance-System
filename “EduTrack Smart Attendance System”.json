@@ -1,0 +1,1237 @@
+{
+  "name": "“EduTrack Smart Attendance System”",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE",
+          "mode": "list",
+          "cachedResultName": "Students Data (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 889557147,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit#gid=889557147"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        -144
+      ],
+      "id": "149c2500-a57a-4af3-9634-6224d48ba3e8",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "a3YwfLpeYbMluWQV",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1e1bd696-6549-47af-8d9d-57fde0eea539",
+              "name": "UniqueID",
+              "value": "={{ $('Google Sheets Trigger').item.json.Type === \"Teacher\" ? \"COLLEGE01-T-\" + $('Google Sheets Trigger').item.json['Teacher ID'] : \"COLLEGE01-S-\" + $('Google Sheets Trigger').item.json['Roll Number'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -752,
+        -144
+      ],
+      "id": "3f652540-f4cb-4af4-bcea-aaf2beaa8f2b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const type = $json[\"Type\"] || \"Student\";\nconst rollNumber = $json[\"Roll Number\"] || \"\";\nconst teacherId = $json[\"Teacher ID\"] || \"\";\nconst name = $json[\"Name\"] || \"Unknown\";\nconst classOrDept = $json[\"Class\"] || $json[\"Department\"] || \"Unknown\";\nconst collegeCode = \"COLLEGE01\";\n\n// Choose an id depending on type\nconst id = type === \"Teacher\" ? (teacherId || 'UNKNOWN') : (rollNumber || 'UNKNOWN');\n// UniqueID built previously by Set node is also available as $json.UniqueID, but build safe fallback here:\nconst uniqueID = $json.UniqueID || `${collegeCode}-${type}-${classOrDept}-${id}`;\n\nreturn  {\n    json: {\n      RollNumber: rollNumber,\n      TeacherID: teacherId,\n      Type: type,\n      Name: name,\n      UniqueID: uniqueID,\n      qrText: `${collegeCode}|${type}|${uniqueID}|${name}|${classOrDept}`\n    }\n  };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        -144
+      ],
+      "id": "a67a97aa-7837-4809-bc53-a7ea7579174a",
+      "name": "Generate QR Code"
+    },
+    {
+      "parameters": {
+        "url": "=https://quickchart.io/qr?text={{$json[\"qrText\"]}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -304,
+        -144
+      ],
+      "id": "c2fd9e1c-3f79-4f03-ab6b-53794b2cce6b",
+      "name": "Create QR Image"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json[\"RollNumber\"] }}.png",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -112,
+        -144
+      ],
+      "id": "989d1149-7556-492c-8efa-61142fb5c58c",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "zv6dIjtEb1YU41ni",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE",
+          "mode": "list",
+          "cachedResultName": "Students Data (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 889557147,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit#gid=889557147"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Google Sheets Trigger').item.json.Timestamp }}",
+            "QR URL": "={{ $json.webViewLink }}",
+            "UniqueID": "={{ $('Edit Fields').item.json.UniqueID }}",
+            "Teacher ID": "={{ $('Google Sheets Trigger').item.json['Teacher ID'] }}",
+            "Type": "={{ $('Google Sheets Trigger').item.json.Type }}",
+            "Parents Gmail (Optional)": "={{ $('Google Sheets Trigger').item.json['Parents Gmail (Optional)'] }}",
+            "Status": "={{ $('Google Sheets Trigger').item.json.Status }}",
+            "Parent/Teacher Number": "={{ $('Google Sheets Trigger').item.json['Parent/Teacher Number'] }}",
+            "Class/Department": "={{ $('Google Sheets Trigger').item.json['Class/Department'] }}",
+            "Roll Number": "={{ $('Google Sheets Trigger').item.json['Roll Number'] }}",
+            "Name": "={{ $('Google Sheets Trigger').item.json.Name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Roll Number",
+              "displayName": "Roll Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Class/Department",
+              "displayName": "Class/Department",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Parent/Teacher Number",
+              "displayName": "Parent/Teacher Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Parents Gmail (Optional)",
+              "displayName": "Parents Gmail (Optional)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Teacher ID",
+              "displayName": "Teacher ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR URL",
+              "displayName": "QR URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UniqueID",
+              "displayName": "UniqueID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        80,
+        -144
+      ],
+      "id": "253f259e-927f-4c7d-900d-a4313252b38d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "EOyP82olRQCvlrpe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE",
+          "mode": "list",
+          "cachedResultName": "Students Data (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 889557147,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit#gid=889557147"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        304,
+        -144
+      ],
+      "id": "a1b3ea43-14e0-43ae-91a7-f952609649dd",
+      "name": "Get row(s) in sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "EOyP82olRQCvlrpe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE",
+          "mode": "list",
+          "cachedResultName": "Students Data (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 889557147,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit#gid=889557147"
+        },
+        "startIndex": "={{ $json[\"rowNumber\"] }}\n"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        -144
+      ],
+      "id": "cc4e630c-c877-4de4-9d66-1941a75d906d",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "EOyP82olRQCvlrpe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b11afa74-2424-4eab-8bca-01386cd80faa",
+        "responseMode": "lastNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1024,
+        112
+      ],
+      "id": "37cce655-d20e-4db9-bc13-aca54bf1e610",
+      "name": "Webhook",
+      "webhookId": "b11afa74-2424-4eab-8bca-01386cd80faa"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract data from inside \"body\"\nconst body = $json.body || {};\n\n// Safely extract rawData string\nconst rawData = body.rawData || \"\";\n\n// Split into parts\nconst parts = rawData.split(\"|\");\n\n// Extract clean values\nconst ScannedName = parts[0] ? parts[0].trim() : \"\";\nconst ScannedType = parts[1] ? parts[1].trim() : \"\";\nconst ScannedUniqueID = parts[2] ? parts[2].trim() : \"\";\nconst Timestamp = body.timestamp || new Date().toISOString();\n\n// Return formatted result\nreturn [\n  {\n    json: {\n      ScannedName,\n      ScannedType,\n      ScannedUniqueID,\n      Timestamp\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        112
+      ],
+      "id": "e982be7d-a3a4-49dd-96ae-74b3a0cf9418",
+      "name": "Extract UniqueID"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get scanned student data from the first function node\nconst scanned = $items(\"Extract UniqueID\")?.[0]?.json;  // Replace \"Function\" with the exact name of your first function node (that outputs ScannedName, ScannedType, ScannedUniqueID)\n\n// Get all rows from Google Sheets\nconst sheetData = $input.all();\n\n// If no data from sheet\nif (!sheetData.length) {\n  return [{ json: { error: \"No data found in sheet\" } }];\n}\n\n// Extract scanned ID\nconst scannedID = scanned?.ScannedUniqueID;\n\n// Find the row in the sheet that matches scannedID\nlet matchedRow = null;\nfor (const row of sheetData) {\n  if (row.json.UniqueID?.trim() === scannedID?.trim()) {\n    matchedRow = row.json;\n    break;\n  }\n}\n\n// Output the matched row if found\nif (matchedRow) {\n  return [{\n    json: {\n      matchFound: true,\n      matchedRow: matchedRow,\n      scanned: scanned\n    }\n  }];\n} else {\n  return [{\n    json: {\n      matchFound: false,\n      scanned: scanned\n    }\n  }];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        144
+      ],
+      "id": "edc86eaf-29d0-45b3-84b3-6a1933f0dcd9",
+      "name": "Find Matching Student"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE",
+          "mode": "list",
+          "cachedResultName": "Students Data (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 889557147,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit#gid=889557147"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -592,
+        128
+      ],
+      "id": "da6acc90-b444-4edd-ac60-03e2638338a8",
+      "name": "Get Students",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "EOyP82olRQCvlrpe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a4bdd96b-ae63-4ff3-822d-4303abea6063",
+              "leftValue": "={{ $json[\"matchFound\"].toString() }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        144
+      ],
+      "id": "16c6baa0-4376-473b-9979-fa6f2c3fed1e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1209f801-82b6-4232-bc2d-3b2659d4b38c",
+              "leftValue": "={{ $json[\"Type\"].toString() }}",
+              "rightValue": "Student",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        96
+      ],
+      "id": "056a22da-18e2-4527-bbff-0fe1d02d4be6",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            },
+            {}
+          ]
+        },
+        "filters": {
+          "q": "\"Attendance Request\""
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1024,
+        464
+      ],
+      "id": "25d66a42-177c-4ac1-a2a6-1ace51a9c426",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HZYu50fqV8U6tK19",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Request - supports both name + uniqueId + date range\n// Examples allowed in email body:\n//   \"Raza October 2025\"\n//   \"COLLEGE01-S-5 October 2025\"\n//   \"Raza COLLEGE01-S-5 October 2025\"\n//   \"Raza 2025-01 to 2025-03\"\n//   \"Raza 2025\"\n//   \"Raza Sep-Oct 2025\"\n\nconst rawBody =\n  ($json[\"body\"]?.text ||\n   $json[\"textPlain\"] ||\n   $json[\"textHtml\"] ||\n   $json[\"snippet\"] ||\n   \"\").trim();\nconst fromSender = $json[\"from\"] || $json[\"headers\"]?.from || \"\";\n\nif (!rawBody) {\n  return [{ json: { error: \"Empty email body. Example: 'Raza COLLEGE01-S-5 Oct 2025' or 'Raza Oct 2025'.\" } }];\n}\n\n// helper: parse month name like \"October\" or \"Oct\" to month index\nfunction parseMonthName(m) {\n  if (!m) return NaN;\n  const tryDate = new Date(`${m} 1, 2000`);\n  return isNaN(tryDate) ? NaN : tryDate.getMonth();\n}\n\n// Tokenize and detect parts\nconst tokens = rawBody.split(/\\s+/);\n\n// Extract name and uniqueId\nlet name = \"\";\nlet uniqueId = \"\";\nlet datePartStart = 0;\n\nfor (let i = 0; i < tokens.length; i++) {\n  const token = tokens[i];\n  // Unique ID pattern like ABC123, COLLEGE01-S-5, etc.\n  if (/^[A-Z0-9\\-]+$/i.test(token) && token.includes(\"-\")) {\n    uniqueId = token;\n    datePartStart = i + 1;\n    break;\n  }\n  // If not an ID, assume it's part of name\n  if (!/\\d{4}/.test(token)) {\n    name += (name ? \" \" : \"\") + token;\n  } else {\n    datePartStart = i;\n    break;\n  }\n}\n\n// Remaining string after name + id\nconst rest = tokens.slice(datePartStart).join(\" \").trim();\n\n// normalize dashes\nconst norm = rest.replace(/–|—/g, '-').trim();\n\nlet fromDate = null;\nlet toDate = null;\n\n// try exact two dates separated by space\nconst twoDatesMatch = norm.match(/^(\\d{4}-\\d{2}-\\d{2})\\s+(\\d{4}-\\d{2}-\\d{2})$/);\nif (twoDatesMatch) {\n  fromDate = new Date(twoDatesMatch[1]);\n  toDate = new Date(twoDatesMatch[2]);\n  toDate.setHours(23,59,59,999);\n} else {\n  // try \"YYYY-MM to YYYY-MM\" or \"YYYY-MM-DD to YYYY-MM-DD\"\n  const rangeMatch = norm.match(/^(\\d{4}-\\d{2}(?:-\\d{2})?)\\s*(?:to|-)\\s*(\\d{4}-\\d{2}(?:-\\d{2})?)$/i);\n  if (rangeMatch) {\n    fromDate = new Date(rangeMatch[1]);\n    toDate = new Date(rangeMatch[2]);\n    if (/^\\d{4}-\\d{2}$/.test(rangeMatch[1])) {\n      fromDate = new Date(rangeMatch[1] + '-01');\n    }\n    if (/^\\d{4}-\\d{2}$/.test(rangeMatch[2])) {\n      const [y,m] = rangeMatch[2].split('-').map(Number);\n      toDate = new Date(y, m, 0, 23,59,59,999);\n    } else {\n      toDate.setHours(23,59,59,999);\n    }\n  } else {\n    // try \"Month Year\" or \"Month-Month Year\"\n    const mmRangeDash = norm.match(/^([A-Za-z]{3,9})\\s*-\\s*([A-Za-z]{3,9})\\s+(\\d{4})$/);\n    const mmRange = norm.match(/^([A-Za-z]{3,9})(?:[,\\s]*([A-Za-z]{3,9}))?\\s+(\\d{4})$/);\n\n    if (mmRangeDash) {\n      const m1 = parseMonthName(mmRangeDash[1]);\n      const m2 = parseMonthName(mmRangeDash[2]);\n      const yr = Number(mmRangeDash[3]);\n      if (!isNaN(m1) && !isNaN(m2)) {\n        fromDate = new Date(yr, m1, 1);\n        toDate = new Date(yr, m2 + 1, 0, 23,59,59,999);\n      }\n    } else if (mmRange) {\n      const m1 = parseMonthName(mmRange[1]);\n      const yr = Number(mmRange[3]);\n      if (!isNaN(m1)) {\n        fromDate = new Date(yr, m1, 1);\n        toDate = new Date(yr, m1 + 1, 0, 23,59,59,999);\n      }\n    } else {\n      // single year\n      const yearMatch = norm.match(/^(\\d{4})$/);\n      if (yearMatch) {\n        const yr = Number(yearMatch[1]);\n        fromDate = new Date(yr, 0, 1);\n        toDate = new Date(yr, 11, 31, 23,59,59,999);\n      } else {\n        // fallback: try natural date string\n        const fallbackDate = new Date(norm);\n        if (!isNaN(fallbackDate)) {\n          fromDate = new Date(fallbackDate.getFullYear(), fallbackDate.getMonth(), 1);\n          toDate = new Date(fallbackDate.getFullYear(), fallbackDate.getMonth()+1, 0, 23,59,59,999);\n        }\n      }\n    }\n  }\n}\n\n// fallback: current month\nif (!fromDate || !toDate) {\n  const now = new Date();\n  fromDate = new Date(now.getFullYear(), now.getMonth(), 1);\n  toDate = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999);\n}\n\nreturn [{\n  json: {\n    requesterEmail: fromSender,\n    name: name || null,\n    uniqueId: uniqueId || null,\n    fromDate: fromDate.toISOString(),\n    toDate: toDate.toISOString(),\n    rawRequest: rawBody\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        448
+      ],
+      "id": "250d86bf-815e-490f-ab01-59311d65843e",
+      "name": "Parse Attendance Request"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE",
+          "mode": "list",
+          "cachedResultName": "Students Data (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 889557147,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QOo3EJs7cvAXGIPpUDizMtJu0gb31-3l4BI9QIRJwKE/edit#gid=889557147"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json[\"matchedRow\"][\"row_number\"] }}\n",
+            "Timestamp": "={{ new Date().toISOString() }}",
+            "Name": "={{ $json.matchedRow.Name }}",
+            "Parent/Teacher Number": "={{ $json.matchedRow['Parent/Teacher Number'] }}",
+            "Class/Department": "={{ $json.matchedRow['Class/Department'] }}",
+            "Roll Number": "={{ $json.matchedRow['Roll Number'] }}",
+            "Status": "=Present",
+            "Teacher ID": "={{ $json.matchedRow['Teacher ID'] }}",
+            "Parents Gmail (Optional)": "={{ $json.matchedRow['Parents Gmail (Optional)'] }}",
+            "Type": "={{ $json.matchedRow.Type }}",
+            "QR URL": "={{ $json.matchedRow['QR URL'] }}",
+            "UniqueID": "={{ $json.matchedRow.UniqueID }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Roll Number",
+              "displayName": "Roll Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Class/Department",
+              "displayName": "Class/Department",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Parent/Teacher Number",
+              "displayName": "Parent/Teacher Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Parents Gmail (Optional)",
+              "displayName": "Parents Gmail (Optional)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Teacher ID",
+              "displayName": "Teacher ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR URL",
+              "displayName": "QR URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UniqueID",
+              "displayName": "UniqueID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -16,
+        48
+      ],
+      "id": "fec0890d-ad66-4cec-b82b-d18dd055d12d",
+      "name": "Update Student Row",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "EOyP82olRQCvlrpe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "admin123@gmail.com",
+        "subject": "Unrecognized QR Scan Attempt",
+        "message": "=A QR code scan was attempted but not found in the student records.<br> Scanned Data: {{ $json[\"scanned\"][\"ScannedName\"] }} | {{ $json[\"scanned\"][\"ScannedType\"] }} | {{ $json[\"scanned\"][\"ScannedUniqueID\"] }}<br><br> Please verify the QR or check for data errors.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        288
+      ],
+      "id": "61c8259d-3b37-4491-b64a-e97a9df867c8",
+      "name": "Notify Admin",
+      "webhookId": "d5950491-8fd5-49fe-800e-988f9cb634b0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HZYu50fqV8U6tK19",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json[\"Parents Gmail (Optional)\"] }}",
+        "subject": "=Attendance Notification — {{ $json[\"Name\"] }}",
+        "message": "=Dear Parent,  This is to inform you that your child {{ $json[\"Name\"] }} ({{ $json[\"Class/Department\"] }}) has been marked PRESENT on {{ (new Date()).toLocaleString() }}.  Regards, COLLEGE01 Attendance System",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        96
+      ],
+      "id": "479c6fad-e13c-45e4-9632-c993c8506935",
+      "name": "Notify Parents",
+      "webhookId": "1620c9b1-a700-4a7c-8c17-a87017f81a93",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HZYu50fqV8U6tK19",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "admin123@gmail.com",
+        "subject": "=Attendance Marked — {{ $json[\"Name\"] }}",
+        "message": "=Dear Principal,  Attendance of {{ $json[\"Name\"] }} has been marked present on {{ (new Date()).toLocaleString() }}.  Regards, COLLEGE01",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        320
+      ],
+      "id": "c7b222df-5c4e-4a27-aac5-ac508df4ad48",
+      "name": "Notify Admin1",
+      "webhookId": "4b373208-effc-458a-8c80-310dacd562c3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HZYu50fqV8U6tK19",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1x6uj4VPpImBZnC86WQwqPIMJXTf5zcGyy8Zvvg-vqpo",
+          "mode": "list",
+          "cachedResultName": "Attendance Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1x6uj4VPpImBZnC86WQwqPIMJXTf5zcGyy8Zvvg-vqpo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1x6uj4VPpImBZnC86WQwqPIMJXTf5zcGyy8Zvvg-vqpo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('If1').item.json.Timestamp }}",
+            "Name": "={{ $('If1').item.json.Name }}",
+            "Type": "={{ $('If1').item.json.Type }}",
+            "Status": "={{ $('If1').item.json.Status }}",
+            "Date": "={{ $now.toFormat(\"yyyy-MM-dd\") }}",
+            "UniqueID": "={{ $('If1').item.json.UniqueID }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UniqueID",
+              "displayName": "UniqueID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        192
+      ],
+      "id": "d9001bdd-c2ae-4797-93e9-3047c5ff7169",
+      "name": "Append Attendance Log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "EOyP82olRQCvlrpe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1x6uj4VPpImBZnC86WQwqPIMJXTf5zcGyy8Zvvg-vqpo",
+          "mode": "list",
+          "cachedResultName": "Attendance Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1x6uj4VPpImBZnC86WQwqPIMJXTf5zcGyy8Zvvg-vqpo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1x6uj4VPpImBZnC86WQwqPIMJXTf5zcGyy8Zvvg-vqpo/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -656,
+        448
+      ],
+      "id": "89da0ebe-61dc-472c-998f-f53aedf4268c",
+      "name": "Get Attendance Log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "EOyP82olRQCvlrpe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// === 1️⃣ Get all rows from your Google Sheet node ===\nlet sheetItems = $items(\"Get Attendance Log\"); // Name of your Google Sheet node\nlet rows = [];\n\nif (Array.isArray(sheetItems)) {\n  rows = sheetItems.map(i => i.json);\n} else if (sheetItems?.json) {\n  rows = [sheetItems.json];\n}\n\n// === 2️⃣ Input data from Gmail or webhook ===\nconst input = $json;\nconst name = input.name?.trim() || \"\";\nconst uniqueId = input.uniqueId?.trim() || \"\";\nconst fromDate = new Date(input.fromDate);\nconst toDate = new Date(input.toDate);\n\n// === 3️⃣ Filter attendance data ===\nconst filtered = rows.filter(row => {\n  const rowId = (row.UniqueID || \"\").trim();\n  const rowName = (row.Name || \"\").trim();\n  const rowStatus = (row.Status || \"\").replace(/\"/g, '').trim().toLowerCase();\n  const rowDate = new Date(row.Date);\n\n  return (\n    rowId === uniqueId &&\n    rowName.toLowerCase() === name.toLowerCase() &&\n    rowDate >= fromDate &&\n    rowDate <= toDate\n  );\n});\n\n// === 4️⃣ Count Present and Absent ===\nlet present = 0, absent = 0;\nfiltered.forEach(r => {\n  const status = (r.Status || \"\").replace(/\"/g, '').trim().toLowerCase();\n  if (status === \"present\") present++;\n  else if (status === \"absent\") absent++;\n});\n\n// === 5️⃣ Calculate totals ===\nconst total = present + absent;\nconst percentage = total > 0 ? ((present / total) * 100).toFixed(2) : \"0.00\";\n\n// === 6️⃣ Return summary ===\nreturn [\n  {\n    json: {\n      name,\n      uniqueId,\n      fromDate: input.fromDate,\n      toDate: input.toDate,\n      present,\n      absent,\n      total,\n      percentage,\n      rawCount: filtered.length,\n      requesterEmail: input.requesterEmail || \"empty\",\n      debug: true,\n      filteredPreview: filtered.slice(0, 5),\n      totalRows: rows.length\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        448
+      ],
+      "id": "61c84a3e-3061-4868-96cb-b9355c66035e",
+      "name": "Calculate Attendance Stats"
+    },
+    {
+      "parameters": {
+        "sendTo": "manatf306@gmail.com",
+        "subject": "=Attendance Summary for {{$json[\"name\"]}} ({{$json[\"uniqueId\"]}})",
+        "message": "=<div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\">\n  <h2 style=\"color: #4CAF50;\">📋 Attendance Summary</h2>\n  <p>Hello Admin,</p>\n  <p>Here is your requested attendance summary for the selected period:</p>\n  \n  <table style=\"border-collapse: collapse; width: 100%; max-width: 400px;\">\n    <tr>\n      <td><strong>From:</strong></td>\n      <td>{{$json[\"fromDate\"]}}</td>\n    </tr>\n    <tr>\n      <td><strong>To:</strong></td>\n      <td>{{$json[\"toDate\"]}}</td>\n    </tr>\n    <tr>\n      <td>✅ <strong>Present:</strong></td>\n      <td>{{$json[\"present\"]}}</td>\n    </tr>\n    <tr>\n      <td>❌ <strong>Absent:</strong></td>\n      <td>{{$json[\"absent\"]}}</td>\n    </tr>\n    <tr>\n      <td>📊 <strong>Percentage:</strong></td>\n      <td>{{$json[\"percentage\"]}}%</td>\n    </tr>\n    <tr>\n      <td><strong>Total Records Found:</strong></td>\n      <td>{{$json[\"rawCount\"]}}</td>\n    </tr>\n  </table>\n\n  <p>Regards,<br><strong>Attendance Automation Bot</strong></p>\n  <hr>\n  <small style=\"color: #888;\">This email was sent automatically via n8n</small>\n</div>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        448
+      ],
+      "id": "895b916d-bac1-4026-8002-8475a3ac23d2",
+      "name": "Send Attendance Summary",
+      "webhookId": "95d5003e-8289-4047-854c-c25059a3dd15",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HZYu50fqV8U6tK19",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Run Once for All Items required\n\nconst items = $input.all(); // array of rows from Get Rows\n\n// Collect row numbers for rows missing UniqueID or QR URL\nconst rowsToDelete = [];\n\nfor (const it of items) {\n  const data = it.json;\n  // check both possible property names for row index\n  const rowNum = data.rowNumber ?? data.row_number ?? data.row ?? data[\"Row\"] ?? null;\n  const uniqueId = (data[\"UniqueID\"] || \"\").toString().trim();\n  const qrUrl = (data[\"QR URL\"] || data[\"QR URL \"] || \"\").toString().trim();\n\n  // if either UniqueID or QR URL is empty -> mark for deletion\n  if (!uniqueId || !qrUrl) {\n    if (rowNum !== null) rowsToDelete.push(Number(rowNum));\n  }\n}\n\n// If none, return nothing\nif (rowsToDelete.length === 0) {\n  return [];\n}\n\n// sort descending so deleting doesn't shift earlier row numbers\nrowsToDelete.sort((a,b) => b - a);\n\n// Map to items expected by n8n Delete Row node\nreturn rowsToDelete.map(rn => ({ json: { rowNumber: rn } }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        -144
+      ],
+      "id": "beb6cb6c-c7f6-420b-bb31-bd8a2def8469",
+      "name": "Find Row"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Generate QR Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate QR Code": {
+      "main": [
+        [
+          {
+            "node": "Create QR Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create QR Image": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Find Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract UniqueID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract UniqueID": {
+      "main": [
+        [
+          {
+            "node": "Get Students",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Matching Student": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Students": {
+      "main": [
+        [
+          {
+            "node": "Find Matching Student",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update Student Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Notify Parents",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Admin1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Attendance Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Attendance Request": {
+      "main": [
+        [
+          {
+            "node": "Get Attendance Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Calculate Attendance Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Student Row": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Parents": {
+      "main": [
+        [
+          {
+            "node": "Append Attendance Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Admin1": {
+      "main": [
+        [
+          {
+            "node": "Append Attendance Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Attendance Log": {
+      "main": [
+        [
+          {
+            "node": "Calculate Attendance Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Attendance Stats": {
+      "main": [
+        [
+          {
+            "node": "Send Attendance Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Row": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "648f5214-31c2-4a1a-bd49-a889266e479f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "76805a458d45370a1d42be1715b47a808e5b870e26808d6c9d3e5fde662d16cb"
+  },
+  "id": "544actpdPcpSK5yC",
+  "tags": []
+}
